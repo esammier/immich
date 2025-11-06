@@ -5,10 +5,9 @@
   import SharedLinkCard from '$lib/components/sharedlinks-page/shared-link-card.svelte';
   import { AppRoute } from '$lib/constants';
   import GroupTab from '$lib/elements/GroupTab.svelte';
+  import { eventManager } from '$lib/managers/event-manager.svelte';
   import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
-  import { handleError } from '$lib/utils/handle-error';
-  import { getAllSharedLinks, removeSharedLink, SharedLinkType, type SharedLinkResponseDto } from '@immich/sdk';
-  import { modalManager, toastManager } from '@immich/ui';
+  import { getAllSharedLinks, SharedLinkType, type SharedLinkResponseDto } from '@immich/sdk';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
@@ -26,29 +25,14 @@
     sharedLinks = await getAllSharedLinks({});
   };
 
+  const onDelete = ({ id }: SharedLinkResponseDto) => {
+    sharedLinks = sharedLinks.filter((sharedLink) => sharedLink.id !== id);
+  };
+
   onMount(async () => {
     await refresh();
+    return eventManager.on('sharedLink.delete', onDelete);
   });
-
-  const handleDeleteLink = async (id: string) => {
-    const isConfirmed = await modalManager.showDialog({
-      title: $t('delete_shared_link'),
-      prompt: $t('confirm_delete_shared_link'),
-      confirmText: $t('delete'),
-    });
-
-    if (!isConfirmed) {
-      return;
-    }
-
-    try {
-      await removeSharedLink({ id });
-      toastManager.success($t('deleted_shared_link'));
-      await refresh();
-    } catch (error) {
-      handleError(error, $t('errors.unable_to_delete_shared_link'));
-    }
-  };
 
   const handleEditDone = async (updatedLink?: SharedLinkResponseDto) => {
     if (updatedLink) {
@@ -109,8 +93,8 @@
       </div>
     {:else}
       <div class="flex flex-col gap-2">
-        {#each filteredSharedLinks as link (link.id)}
-          <SharedLinkCard {link} onDelete={() => handleDeleteLink(link.id)} />
+        {#each filteredSharedLinks as sharedLink (sharedLink.id)}
+          <SharedLinkCard {sharedLink} />
         {/each}
       </div>
     {/if}

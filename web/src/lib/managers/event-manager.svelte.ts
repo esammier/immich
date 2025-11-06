@@ -1,5 +1,5 @@
 import type { ThemeSetting } from '$lib/managers/theme-manager.svelte';
-import type { LoginResponseDto } from '@immich/sdk';
+import type { LoginResponseDto, SharedLinkResponseDto } from '@immich/sdk';
 
 type Listener<EventMap extends Record<string, unknown[]>, K extends keyof EventMap> = (...params: EventMap[K]) => void;
 
@@ -58,4 +58,5 @@ export const eventManager = new EventManager<{
   'auth.logout': [];
   'language.change': [{ name: string; code: string; rtl?: boolean }];
   'theme.change': [ThemeSetting];
+  'sharedLink.delete': [SharedLinkResponseDto];
 }>();
